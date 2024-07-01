@@ -1,0 +1,8 @@
+*.swp
+.tmp
+.idea
+node_modules
+dist
+package
+*.log
+*.log.gz

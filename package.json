@@ -1,0 +1,50 @@
+{
+	"name": "wcterminal",
+	"version": "0.0.1",
+	"description": "Web Component Terminal",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/stupid-genius/wcterminal"
+	},
+	"author": "Stupid Genius Software",
+	"license": "GPL-3.0",
+	"main": "app/server/index.js",
+	"engines": {
+		"node": ">=16"
+	},
+	"dependencies": {
+		"APIClient": "github:stupid-genius/APIClient",
+		"body-parser": "^1.20.2",
+		"ejs": "2.5.5",
+		"express": "^4.17.1",
+		"log-ng": "github:stupid-genius/log-ng",
+		"morgan": "^1.10.0",
+		"serve-favicon": "^2.5.0",
+		"winston": "^3.3.3"
+	},
+	"devDependencies": {
+		"browser-sync": "^2.29.3",
+		"chai": "^4.3.10",
+		"esbuild": "^0.17.19",
+		"eslint": "^8.3.0",
+		"karma": "^6.4.2",
+		"karma-chai": "^0.1.0",
+		"karma-chrome-launcher": "^3.2.0",
+		"karma-firefox-launcher": "^2.1.2",
+		"karma-mocha": "^2.0.1",
+		"karma-mocha-reporter": "^2.2.5",
+		"mocha": "^9.2.2"
+	},
+	"scripts": {
+		"app": "npm run build; docker compose up --build; docker compose down",
+		"build": "npm run clean; ./build.sh",
+		"clean": "rm -rf dist",
+		"container": "docker run --name webapp -p80:3000 --rm wcterminal",
+		"esbuild": "esbuild",
+		"image": "docker build -t wcterminal .",
+		"nodemon": "npx nodemon dist/server/index.js",
+		"package": "mkdir -p package; cd dist; npm pack --pack-destination='../package/'",
+		"start": "NODE_ENV=development ./serve.sh",
+		"test": "mocha test/server && karma start"
+	}
+}

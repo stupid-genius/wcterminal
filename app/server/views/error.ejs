@@ -1,0 +1,21 @@
+<!DOCTYPE HTML>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<title><%- title %></title>
+	</head>
+	<body>
+		<% include header %>
+
+		<section>
+			<%- message %>
+			<%- error.status %>
+			<pre><code>
+<%- error.stack %>
+			</code></pre>
+		</section>
+
+		<% include footer %>
+	</body>
+</html>
+

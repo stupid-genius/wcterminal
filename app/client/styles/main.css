@@ -1,0 +1,10 @@
+body {
+	font-family: monospace;
+	margin: 0;
+	overflow: hidden;
+	padding: 0;
+}
+
+ng-terminal {
+	display: block;
+}

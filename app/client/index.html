@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>WCTerminal</title>
+		<link rel="stylesheet" href="/styles/main.css">
+		<script src="/scripts/index.js"></script>
+	</head>
+	<body>
+		<ng-terminal rpc="true">
+			<style>
+				#terminal{
+					background: black;
+					color: white;
+					font-family: monospace;
+					height: 100vh;
+					margin: 0;
+					overflow-y: auto;
+					padding: 10px;
+				}
+				.output{
+					white-space: pre-wrap;
+				}
+				.input-area{
+					display: flex;
+				}
+				.prompt{
+					display: inline;
+				}
+				.input-line{
+					display: inline;
+					flex-grow: 1;
+					outline: none;
+
+					border: none;
+					background: transparent;
+					color: inherit;
+				}
+			</style>
+			<template id="ui">
+				<div id="terminal">
+					<div class="output"></div>
+					<div class="input-area">
+						<span class="prompt">>&nbsp;</span>
+						<span class="input-line" contenteditable="true"></span>
+					</div>
+				</div>
+			</template>
+			<template id="login">
+				<div id="terminal">
+					<div>Web Component Terminal</div>
+					<div class="output"></div>
+					<div class="input-area">
+						<span class="prompt">login:&nbsp;</span>
+						<span class="input-line" contenteditable="true"></span>
+					</div>
+				</div>
+			</template>
+		</ng-terminal>
+	</body>
+</html>
