@@ -17,25 +17,17 @@ For the time being, this should be considered a reference implementation, not a 
 
 Features:
  - built-in Executor, w/command registry
- - JSON-RPC
- - login via JSON-RPC
+ - JSON-RPC including login
  - sub-terminals
  - command history, w/persistence
 
-TODO:
- - autocomplete
- - pipe, redirect, etc
-
 Bugs/Enhancements:
- - command history is saving login with password
- - JSONRPC needs error handling
- - help cmd should include rpc cmds
- - fix Executor build (weird symlinks, copying, etc)
- - limit output lines
- - ctrl + c should cancel current command
- - add nesting prompts for sub-terminals
- - Executor needs a "delegation" mode, eg. for cas cmd
- - Executor/registry injection needs work
- - persistent session
- - for JSONRPC, if token passed in object, attach to func and let cmd decide if it's needed
+ - ctrl + c should cancel current command or exit sub-terminal
+ - navigating through history gets out of sync
+ - persistent session across refresh (implement cookie session and store token; return on authenticated request)
+ - autocomplete
+ - pipe, redirect, pager, etc
+ - encoding issues (eg. weather cmd)
+ - separate command history for each terminal
  - allow cmd retrieval from external sources (yikes)
+ - Executor/registry injection needs work (what was this?)

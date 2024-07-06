@@ -8,11 +8,11 @@
 		<script src="/scripts/index.js"></script>
 	</head>
 	<body>
-		<ng-terminal rpc="true">
+		<ng-terminal rpc="false" greeting="Stupid Genius Software">
 			<style>
 				#terminal{
-					background: black;
-					color: white;
+					background: #0A110A;
+					color: lightgreen;
 					font-family: monospace;
 					height: 100vh;
 					margin: 0;
@@ -29,13 +29,12 @@
 					display: inline;
 				}
 				.input-line{
+					background: transparent;
+					border: none;
+					color: inherit;
 					display: inline;
 					flex-grow: 1;
 					outline: none;
-
-					border: none;
-					background: transparent;
-					color: inherit;
 				}
 			</style>
 			<template id="ui">
@@ -49,7 +48,6 @@
 			</template>
 			<template id="login">
 				<div id="terminal">
-					<div>Web Component Terminal</div>
 					<div class="output"></div>
 					<div class="input-area">
 						<span class="prompt">login:&nbsp;</span>

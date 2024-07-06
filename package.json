@@ -1,6 +1,6 @@
 {
 	"name": "wcterminal",
-	"version": "0.0.1",
+	"version": "0.9.0",
 	"description": "Web Component Terminal",
 	"repository": {
 		"type": "git",
@@ -9,16 +9,23 @@
 	"author": "Stupid Genius Software",
 	"license": "GPL-3.0",
 	"main": "app/server/index.js",
+	"browser": {
+		"Executor": "app/server/Executor.js",
+		"getopt": "app/server/getopt.js",
+		"Terminal": "app/client/scripts/Terminal.js"
+	},
 	"engines": {
 		"node": ">=16"
 	},
 	"dependencies": {
+		"algebrite": "github:davidedc/Algebrite",
 		"APIClient": "github:stupid-genius/APIClient",
 		"body-parser": "^1.20.2",
 		"ejs": "2.5.5",
 		"express": "^4.17.1",
 		"log-ng": "github:stupid-genius/log-ng",
 		"morgan": "^1.10.0",
+		"PRNG": "github:stupid-genius/PRNGs",
 		"serve-favicon": "^2.5.0",
 		"winston": "^3.3.3"
 	},

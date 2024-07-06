@@ -4,8 +4,8 @@
 set -e
 shopt -s extglob
 
-echo Publishing disabled by default
-exit
+# echo Publishing disabled by default
+# exit
 
 ORIGBRANCH=$(git rev-parse --abbrev-ref HEAD)
 cleanup(){
@@ -25,10 +25,12 @@ rm -rf ./!(dist) || :
 rm -rf .github
 rm -f .[^.]* || :
 mv dist/client/* .
-rmdir dist/client
-rmdir dist
+rm -rf dist
 git add -A
 git commit -m "Prepping to publish ($(git rev-parse --short master))"
+
+# exit here to bootstrap gh-pages
+# exit
 
 echo Publish to gh-pages
 git fetch origin gh-pages:gh-pages

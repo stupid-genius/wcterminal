@@ -7,7 +7,19 @@ const endpointRegistry = require('./endpointRegistry.js');
 const client = new APIClient(endpointRegistry);
 const logger = new Logger('commandRegistry.js');
 
+const hiddenCmds = ['exit', 'help', 'login', 'system.describe'];
 const registry = Object.freeze({
+	exit: {
+		func: function(){
+			// in a real server this should perform normal logout stuff, eg. cleaning up session, etc.
+			this.rpc('exit');
+		}
+	},
+	help: {
+		func: function(command){
+			this.rpc(`Return help for ${command}`);
+		}
+	},
 	login: {
 		func: function(user, pass){
 			logger.debug(`Attempting to log in user ${user}`);
@@ -28,7 +40,7 @@ const registry = Object.freeze({
 	},
 	'system.describe': {
 		func: function(){
-			const procs = Object.keys(registry).filter(proc => proc !== 'system.describe');
+			const procs = Object.keys(registry).filter(proc => !hiddenCmds.includes(proc));
 			const response = {
 				sdversion: '1.0',
 				name: 'WC Terminal Server',

@@ -2,7 +2,7 @@ const {APIClient} = require('APIClient');
 const {
 	JSONRPCClient,
 	Executor
-} = require('./Executor');
+} = require('../../server/Executor.js');
 const Logger = require('log-ng').default;
 const commandRegistry = require('./commandRegistry');
 
@@ -14,7 +14,7 @@ const MAX_OUTPUT = 1000;
 /**
  * @class Terminal
  * @extends HTMLElement
- * @description A web component that emulates a terminal
+ * @description A web component that mimics a terminal
  * @example
  * <ng-terminal></ng-terminal>
  * @example
@@ -38,29 +38,28 @@ class Terminal extends HTMLElement{
 		}
 
 		this.inputHandler = this.inputHandler.bind(this);
-		this.addEventListener('terminal-reset', this.reset.bind(this));
+		this.reset = this.reset.bind(this);
+		this.addEventListener('terminal-reset', this.reset);
 	}
 
 	connectedCallback(){
 		logger.debug('Terminal connected');
 		document.addEventListener('DOMContentLoaded', async () => {
 			logger.debug('DOMContentLoaded event fired');
-			this.rpcEnabled = this.getAttribute('rpc');
 
 			this.executor ??= (() => {
 				logger.debug('Creating executor');
 				const execLogger = new Logger('Executor.js');
 				let rpcClient;
 				if(this.rpcEnabled){
-					rpcClient = JSONRPCClient(execLogger, new APIClient());
+					logger.debug('RPC enabled');
+					const rpcLogger = new Logger('Executor.js (JSONRPCClient)');
+					rpcClient = JSONRPCClient(rpcLogger, new APIClient());
 				}
 				return Executor.bind(this)(execLogger, commandRegistry, rpcClient);
 			})();
 
-			this.reset();
-			if(this.rpcEnabled === 'false'){
-				this.echo('Welcome to Web Component Terminal');
-			}
+			this.reset(new CustomEvent('terminal-reset', {detail: {clear: true}}));
 		});
 	}
 
@@ -70,13 +69,18 @@ class Terminal extends HTMLElement{
 		this.removeEventListener('click', this.focusHandler);
 	}
 
-	reset(){
+	reset(event){
 		logger.debug(`Terminal reset (${this.parentTerminal ? 'sub-terminal' : 'main terminal'})`);
+		logger.debug(`Auth state: ${this.authState}, RPC enabled: ${this.rpcEnabled}`);
 
-		if(this.rpcEnabled === 'true'){
+		// setting the authState will bypass logging in, but there will be no token
+		if(this.rpcEnabled && this.authState !== Executor.OK){
+			logger.debug('logging in');
 			this.loginModal();
 		}else{
-			this.uiModal();
+			const clear = event.detail?.clear ?? false;
+			logger.debug(`reset ${clear ? 'and clear ' : ''}terminal`);
+			this.uiModal(clear);
 		}
 
 		this.focusHandler = function(){this.inputLine.focus();}.bind(this);
@@ -90,14 +94,6 @@ class Terminal extends HTMLElement{
 	}
 
 	loginModal(){
-		// setting the authState will not bypass logging in because there will be no token
-		if(this.authState === Executor.OK){
-			this.uiModal();
-			this.addEventListener('click', this.focusHandler);
-			this.echo('Welcome to Web Component Terminal');
-			return;
-		}
-
 		this.shadowRoot.innerHTML = '';
 		this.applyStyles();
 
@@ -105,6 +101,7 @@ class Terminal extends HTMLElement{
 		this.shadowRoot.appendChild(loginTemplate);
 		this.inputLine = this.shadowRoot.querySelector('.input-line');
 		this.output = this.shadowRoot.querySelector('.output');
+		this.echo('Please log in');
 
 		let username, password;
 		const loginHandler = async (e) => {
@@ -125,9 +122,7 @@ class Terminal extends HTMLElement{
 
 						this.inputLine.removeEventListener('keydown', loginHandler);
 						this.removeEventListener('click', this.focusHandler);
-						this.uiModal();
-						this.addEventListener('click', this.focusHandler);
-						this.echo('Welcome to Web Component Terminal');
+						this.reset(new CustomEvent('terminal-reset', {detail: {clear: true}}));
 					}catch(e){
 						this.echo(e);
 						logger.error(e);
@@ -155,7 +150,7 @@ class Terminal extends HTMLElement{
 		this.inputLine.addEventListener('keydown', loginHandler);
 	}
 
-	uiModal(){
+	uiModal(clear){
 		const output = this.shadowRoot.querySelector('.output')?.innerHTML;
 		this.shadowRoot.innerHTML = '';
 		this.applyStyles();
@@ -164,10 +159,28 @@ class Terminal extends HTMLElement{
 		this.shadowRoot.appendChild(uiTemplate);
 		this.inputLine = this.shadowRoot.querySelector('.input-line');
 		this.output = this.shadowRoot.querySelector('.output');
-		this.output.innerHTML = output ?? '';
+
+		if(clear && this.greeting){
+			logger.debug('clearing terminal');
+			this.echo(this.greeting);
+		}else{
+			this.output.innerHTML = output ?? '';
+		}
 
 		this.inputLine.addEventListener('keydown', this.inputHandler);
 		this.inputLine.focus();
+	}
+
+	get greeting(){
+		return this.getAttribute('greeting');
+	}
+
+	set greeting(value){
+		if(value === undefined){
+			this.removeAttribute('greeting');
+		}else{
+			this.setAttribute('greeting', value);
+		}
 	}
 
 	get prompt(){
@@ -180,13 +193,18 @@ class Terminal extends HTMLElement{
 		prompt.innerHTML = `${value}&nbsp;`;
 	}
 
+	get rpcEnabled(){
+		return this.getAttribute('rpc') === 'true';
+	}
+
 	inputHandler(e){
 		switch(e.key){
 		case 'Enter':{
 			e.preventDefault();
 			const command = this.inputLine.textContent.trim();
-			this.processCommand(command);
 			this.inputLine.textContent = '';
+			this.echo(`${this.prompt}${command}`);
+			this.processCommand(command);
 			break;
 		}
 		case 'ArrowUp':
@@ -210,13 +228,13 @@ class Terminal extends HTMLElement{
 	}
 
 	async processCommand(command){
-		this.output.innerHTML += `<div>>&nbsp;${command}</div>`;
 		try{
 			const status = await this.executor(command);
 			logger.debug(`Status: ${status}`);
 			switch(status){
 			case Executor.OK:
 				logger.debug(`${command} executed successfully`);
+				// if(command !== this.commandHistory[this.commandHistory.length - 1] && command !== 'login'){
 				if(command !== this.commandHistory[this.commandHistory.length - 1]){
 					this.commandHistory.push(command);
 					if(this.commandHistory.length > MAX_HISTORY){
@@ -243,11 +261,6 @@ class Terminal extends HTMLElement{
 			logger.error(e);
 			this.echo(e);
 		}
-
-		const rect = this.inputLine.getBoundingClientRect();
-		if(rect.bottom > window.innerHeight){
-			this.inputLine.scrollIntoView({ behavior: 'smooth' });
-		}
 	}
 
 	clear(){
@@ -255,23 +268,35 @@ class Terminal extends HTMLElement{
 	}
 
 	echo(text){
-		this.output.innerHTML += `<div>${text}</div>`;
-		// if(this.output.children.length > MAX_OUTPUT){
-		// 	this.output.removeChild(this.output.firstChild);
-		// 	this.output.removeChild(this.output.firstChild);
-		// }
+		if(text !== undefined && text !== null && text !== ''){
+			this.output.innerHTML += `<div>${text}</div>`;
+		}
+
+		while(this.output.children.length > MAX_OUTPUT){
+			this.output.removeChild(this.output.firstChild);
+		}
+
+		const rect = this.inputLine.getBoundingClientRect();
+		if(rect.bottom > window.innerHeight){
+			this.inputLine.scrollIntoView({ behavior: 'smooth' });
+		}
 	}
 
-	startSubTerminal(name, registry){
-		logger.info(`Starting sub-terminal: ${name}`);
+	startSubTerminal(config){
+		logger.info(`Starting sub-terminal: ${config.name}`);
 
-		const subLogger = new Logger(`Executor.js (${name})`);
+		this.removeEventListener('terminal-reset', this.reset);
+		const subLogger = new Logger(`Executor.js (${config.name})`);
 		const subterm = document.createElement('ng-terminal');
 		subterm.innerHTML = this.innerHTML;
-		subterm.executor = Executor.bind(subterm)(subLogger, registry);
+		subterm.greeting = config.greeting;
+		subterm.executor = Executor.bind(subterm)(subLogger, config.registry);
 		subterm.parentTerminal = this;
 		this.replaceWith(subterm);
-		subterm.dispatchEvent(new Event('terminal-reset'));
+		subterm.dispatchEvent(new CustomEvent('terminal-reset', {detail: {clear: true}}));
+		if(config.prompt !== undefined){
+			subterm.prompt = config.prompt;
+		}
 		return subterm;
 	}
 
@@ -279,8 +304,9 @@ class Terminal extends HTMLElement{
 		if(this.parentTerminal){
 			logger.info('Exiting sub-terminal');
 			logger.debug(`Parent terminal: ${JSON.stringify(this.parentTerminal)}`);
+			this.parentTerminal.addEventListener('terminal-reset', this.parentTerminal.reset);
 			this.replaceWith(this.parentTerminal);
-			this.parentTerminal.dispatchEvent(new Event('terminal-reset'));
+			this.parentTerminal.dispatchEvent(new CustomEvent('terminal-reset', {detail: {clear: false}}));
 		}else{
 			logger.warn('No parent terminal found');
 		}
