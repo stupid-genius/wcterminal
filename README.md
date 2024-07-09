@@ -30,4 +30,3 @@ Bugs/Enhancements:
  - encoding issues (eg. weather cmd)
  - separate command history for each terminal
  - allow cmd retrieval from external sources (yikes)
- - Executor/registry injection needs work (what was this?)

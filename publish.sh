@@ -37,5 +37,7 @@ git fetch origin gh-pages:gh-pages
 git checkout gh-pages
 git read-tree -mu publish
 git commit -m "Publishing: $MESG"
+git remote set-url origin "https://stupid-genius:$GHT@github.com/stupid-genius/wcterminal.git"
 git push origin gh-pages
+
 echo Publishing complete

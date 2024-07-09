@@ -223,20 +223,26 @@ const registry = Object.freeze({
 				case 'ascii':{
 					const containerWidth = 80;
 					const maxEntryLength = 'ASCII 126 = ~'.length;
-					const entriesPerRow = Math.floor(containerWidth / maxEntryLength);
-					const rows = [];
-					let currentRow = [];
+					const columns = Math.floor(containerWidth / maxEntryLength);
+					const entries = [];
 					for(let i = 32; i < 127; i++){
-						const entry = `ASCII ${i} = ${String.fromCharCode(i)}`;
-						currentRow.push(entry);
-						if(currentRow.length >= entriesPerRow){
-							// Current row is full, start a new one
-							rows.push(currentRow.join('\t'));
-							currentRow = [];
-						}
+						entries.push(`ASCII ${i} = ${String.fromCharCode(i)}`);
 					}
-					if(currentRow.length > 0) rows.push(currentRow.join('\t'));
+
+					const rows = [];
+					for(let row = 0; row < Math.ceil(entries.length / columns); row++){
+						const currentRow = [];
+						for(let col = 0; col < columns; col++){
+							const index = col * Math.ceil(entries.length / columns) + row;
+							if(index < entries.length){
+								currentRow.push(entries[index]);
+							}
+						}
+						rows.push(currentRow.join('\t'));
+					}
+
 					this.echo(rows.join('<br />'));
+
 					break;
 				}
 				case 'html':
@@ -326,6 +332,7 @@ const registry = Object.freeze({
 				function padNumber(num){
 					return num < 10 ? '0' + num : num;
 				}
+
 				const date = new Date();
 				this.echo(`${padNumber(date.getHours())}:${padNumber(date.getMinutes())}:${padNumber(date.getSeconds())}`);
 			}

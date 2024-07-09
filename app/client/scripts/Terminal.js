@@ -1,10 +1,5 @@
-const {APIClient} = require('APIClient');
-const {
-	JSONRPCClient,
-	Executor
-} = require('../../server/Executor.js');
+const { Executor } = require('../../server/Executor.js');
 const Logger = require('log-ng').default;
-const commandRegistry = require('./commandRegistry');
 
 const logger = new Logger('Terminal.js');
 
@@ -40,27 +35,17 @@ class Terminal extends HTMLElement{
 		this.inputHandler = this.inputHandler.bind(this);
 		this.reset = this.reset.bind(this);
 		this.addEventListener('terminal-reset', this.reset);
+
+		const domLoad = (function(){
+			logger.debug('DOMContentLoaded event fired');
+			this.reset(new CustomEvent('terminal-reset', {detail: {clear: true}}));
+			document.removeEventListener('DOMContentLoaded', domLoad);
+		}).bind(this);
+		document.addEventListener('DOMContentLoaded', domLoad);
 	}
 
 	connectedCallback(){
 		logger.debug('Terminal connected');
-		document.addEventListener('DOMContentLoaded', async () => {
-			logger.debug('DOMContentLoaded event fired');
-
-			this.executor ??= (() => {
-				logger.debug('Creating executor');
-				const execLogger = new Logger('Executor.js');
-				let rpcClient;
-				if(this.rpcEnabled){
-					logger.debug('RPC enabled');
-					const rpcLogger = new Logger('Executor.js (JSONRPCClient)');
-					rpcClient = JSONRPCClient(rpcLogger, new APIClient());
-				}
-				return Executor.bind(this)(execLogger, commandRegistry, rpcClient);
-			})();
-
-			this.reset(new CustomEvent('terminal-reset', {detail: {clear: true}}));
-		});
 	}
 
 	disconnectedCallback(){
@@ -169,6 +154,15 @@ class Terminal extends HTMLElement{
 
 		this.inputLine.addEventListener('keydown', this.inputHandler);
 		this.inputLine.focus();
+	}
+
+	get executor(){
+		return this._executor;
+	}
+
+	set executor(value){
+		logger.info('Setting executor');
+		this._executor = value;
 	}
 
 	get greeting(){

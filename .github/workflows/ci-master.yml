@@ -46,5 +46,7 @@ jobs:
           git config user.name "Allen"
           git config user.email "accounts@stupid-genius.com"
       - name: Publish to pages branch
+        env:
+          GHT: ${{ secrets.GITHUB_TOKEN }}
         run: ./publish.sh
 
